@@ -24,6 +24,10 @@ export class AppComponent {
   noOfPax: number = 1;
   cashAmount: string = '';
   
+  // Last 5 orders array
+  lastOrders: any[] = [];
+  showOrderHistory: boolean = false;
+  
   todaySummary = {
     totalSales: 0,
     totalOrders: 0,
@@ -66,11 +70,11 @@ export class AppComponent {
     { id: 14, name: 'Sj - Kit Kat', price: 30, categoryId: 3 },
     { id: 15, name: 'Sj - Praline', price: 30, categoryId: 3 },
     { id: 16, name: 'Sj - Tufty Fruity', price: 30, categoryId: 3 },
-    { id: 17, name: 'SDK - Chia seeds Juice', price: 90, categoryId: 3 },
-    { id: 18, name: 'SDK - Mint Lemon Juice', price: 80, categoryId: 3 },
-{ id: 19, name: 'SDK - Watermelon Fresh Juice', price: 100, categoryId: 3 },
-{ id: 20, name: 'SDK - Pineapple Ginger Juice', price: 110, categoryId: 3 },
-{ id: 21, name: 'SDK - Orange Carrot Detox Juice', price: 120, categoryId: 3 }
+    { id: 17, name: 'SDK - Chia seeds Juice', price: 90, categoryId: 2 },
+    { id: 18, name: 'SDK - Mint Lemon Juice', price: 80, categoryId: 2 },
+    { id: 19, name: 'SDK - Watermelon Fresh Juice', price: 100, categoryId: 2 },
+    { id: 20, name: 'SDK - Pineapple Ginger Juice', price: 110, categoryId: 2 },
+    { id: 21, name: 'SDK - Orange Carrot Detox Juice', price: 120, categoryId: 2 }
   ];
 
   get filteredItems() {
@@ -103,6 +107,7 @@ export class AppComponent {
     this.discount = 0;
     this.packingCharges = 0;
     this.noOfPax = 1;
+    this.showOrderHistory = false;
   }
 
   selectCategory(categoryId: number) {
@@ -167,6 +172,16 @@ export class AppComponent {
     }
   }
 
+  // Show last 5 orders
+  showLastOrders() {
+    this.showOrderHistory = true;
+  }
+
+  // Close order history modal
+  closeOrderHistory() {
+    this.showOrderHistory = false;
+  }
+
   makePayment() {
     if (this.cart.length === 0) {
       alert('Cart is empty! Please add items.');
@@ -175,6 +190,24 @@ export class AppComponent {
 
     this.tokenNumber++;
     this.billNumber++;
+    
+    // Save order to lastOrders array
+    const newOrder = {
+      id: this.billNumber,
+      tokenNo: this.tokenNumber,
+      tableNo: this.selectedTable,
+      customerName: this.customerName || 'Guest',
+      amount: this.totalPayable,
+      date: new Date(),
+      items: [...this.cart],
+      type: this.orderType
+    };
+    
+    // Add to beginning of array and keep only last 5
+    this.lastOrders.unshift(newOrder);
+    if (this.lastOrders.length > 5) {
+      this.lastOrders.pop();
+    }
     
     this.todaySummary.totalSales += this.totalPayable;
     this.todaySummary.totalOrders++;
@@ -199,11 +232,13 @@ export class AppComponent {
     this.customerName = '';
     this.customerMobile = '';
     this.cashAmount = '';
+    this.showOrderHistory = false;
   }
 
   backToTables() {
     this.selectedTable = null;
     this.cart = [];
+    this.showOrderHistory = false;
   }
 
   clearCart() {

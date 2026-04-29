@@ -23,15 +23,15 @@
         <input type="text" placeholder="Search">
       </div>
       <div class="tables-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 15px;">
-  <div *ngFor="let table of tables" 
-       class="table-card" 
-       [class.occupied]="table.isOccupied"
-       (click)="!table.isOccupied && selectTable(table.id)"
-       style="padding: 25px; text-align: center; background: linear-gradient(135deg, #f5f7fa, #e4e8f0); border-radius: 16px; cursor: pointer;">
-    <div style="font-size: 1.3rem; font-weight: bold;">{{ table.id }}</div>
-    <div style="font-size: 0.75rem;">{{ table.isOccupied ? '👥 Busy' : '🪑 Free' }}</div>
-  </div>
-</div>
+        <div *ngFor="let table of tables" 
+             class="table-card" 
+             [class.occupied]="table.isOccupied"
+             (click)="!table.isOccupied && selectTable(table.id)"
+             style="padding: 25px; text-align: center; background: linear-gradient(135deg, #f5f7fa, #e4e8f0); border-radius: 16px; cursor: pointer;">
+          <div style="font-size: 1.3rem; font-weight: bold;">{{ table.id }}</div>
+          <div style="font-size: 0.75rem;">{{ table.isOccupied ? '👥 Busy' : '🪑 Free' }}</div>
+        </div>
+      </div>
       <div class="token-footer">
         <span>Empty Token</span>
         <span>Occupied Token</span>
@@ -169,9 +169,41 @@
 
         <!-- Action Buttons -->
         <div class="settlement-actions">
-          <button class="online-eft">Online EFT</button>
+          <button class="online-eft" (click)="showLastOrders()">📱 Online EFT</button>
           <button class="settle-button" (click)="makePayment()">Make Settlement (F11)</button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order History Modal -->
+<div class="order-history-overlay" *ngIf="showOrderHistory" (click)="closeOrderHistory()">
+  <div class="order-history-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>📋 Last 5 Orders</h3>
+      <button class="close-modal" (click)="closeOrderHistory()">✖</button>
+    </div>
+    <div class="modal-body">
+      <div class="order-list" *ngIf="lastOrders.length > 0">
+        <div class="order-card" *ngFor="let order of lastOrders">
+          <div class="order-header">
+            <span class="order-id">Order #{{ order.id }}</span>
+            <span class="order-amount">₹{{ order.amount }}</span>
+          </div>
+          <div class="order-details">
+            <p>🪑 Table {{ order.tableNo }} | 🎫 Token #{{ order.tokenNo }}</p>
+            <p>👤 {{ order.customerName }} | 🍽️ {{ order.type }}</p>
+            <p>📅 {{ order.date | date:'short' }}</p>
+          </div>
+          <div class="order-items">
+            <strong>Items:</strong> {{ order.items.length }} items
+          </div>
+        </div>
+      </div>
+      <div class="empty-orders" *ngIf="lastOrders.length === 0">
+        <p>No orders yet</p>
+        <p>Complete a payment to see orders here</p>
       </div>
     </div>
   </div>
