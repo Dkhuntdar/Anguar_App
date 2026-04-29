@@ -1,0 +1,178 @@
+<div class="pos-system">
+  <!-- Header -->
+  <header class="header">
+    <div class="logo-area">
+      <h1>AGAVE PREMIUM POS</h1>
+      <span>Alam Bhai Juice Shop,Lari</span>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab">KOTs/Stickers</button>
+      <button class="tab" (click)="selectedTable = null; cart = []">Table</button>
+      <button class="tab">Menu/Iteams</button>
+    </div>
+    <div class="user-info">
+      <span>User: Deb</span>
+      <span>{{ today | date:'EEE, MMM d, y' }}</span>
+    </div>
+  </header>
+
+  <div class="main-content">
+    <!-- LEFT PANEL - TABLES (Shows when no table selected) -->
+    <div class="tables-panel" *ngIf="!selectedTable">
+      <div class="search-box">
+        <input type="text" placeholder="Search">
+      </div>
+      <div class="tables-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 15px;">
+  <div *ngFor="let table of tables" 
+       class="table-card" 
+       [class.occupied]="table.isOccupied"
+       (click)="!table.isOccupied && selectTable(table.id)"
+       style="padding: 25px; text-align: center; background: linear-gradient(135deg, #f5f7fa, #e4e8f0); border-radius: 16px; cursor: pointer;">
+    <div style="font-size: 1.3rem; font-weight: bold;">{{ table.id }}</div>
+    <div style="font-size: 0.75rem;">{{ table.isOccupied ? '👥 Busy' : '🪑 Free' }}</div>
+  </div>
+</div>
+      <div class="token-footer">
+        <span>Empty Token</span>
+        <span>Occupied Token</span>
+        <span>Billed Token</span>
+      </div>
+    </div>
+
+    <!-- MAIN WORK AREA (Shows when table selected) -->
+    <div class="work-area" *ngIf="selectedTable">
+      <!-- LEFT SIDE: Menu Selection -->
+      <div class="menu-section">
+        <!-- Order Header -->
+        <div class="order-header">
+          <div class="order-numbers">
+            <span>Order # -{{ billNumber }}</span>
+            <span>Bill #: {{ billNumber }}</span>
+            <span>Token #: {{ tokenNumber }}</span>
+            <span>Pax: <input type="number" [(ngModel)]="noOfPax" class="pax-input"></span>
+          </div>
+          <div class="order-types">
+            <button class="type" [class.active]="orderType === 'dine'" (click)="orderType='dine'">Dine In</button>
+            <button class="type" [class.active]="orderType === 'takeaway'" (click)="orderType='takeaway'">Take Away</button>
+            <button class="type" [class.active]="orderType === 'delivery'" (click)="orderType='delivery'">Delivery</button>
+          </div>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="customer-row">
+          <input type="text" placeholder="Mobile:" [(ngModel)]="customerMobile">
+          <input type="text" placeholder="Name:" [(ngModel)]="customerName">
+        </div>
+
+        <!-- Menu Categories -->
+        <div class="menu-categories">
+          <button *ngFor="let cat of categories" 
+                  [class.active]="activeCategory === cat.id"
+                  (click)="selectCategory(cat.id)">
+            {{ cat.icon }} {{ cat.name }}
+          </button>
+        </div>
+
+        <!-- Menu Items Grid -->
+        <div class="menu-items-grid">
+          <div *ngFor="let item of filteredItems" class="menu-card" (click)="addToCart(item)">
+            <div>
+              <div class="menu-name">{{ item.name }}</div>
+              <div class="menu-price">₹{{ item.price }}</div>
+            </div>
+            <div class="add-button">+</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT SIDE: Settlement Section (Fixed) -->
+      <div class="settlement-section">
+        <div class="settlement-header">
+          <span>💰 BILL SETTLEMENT</span>
+          <button class="clear-all" (click)="clearCart()">Clear</button>
+        </div>
+
+        <!-- Cart Items -->
+        <div class="cart-items">
+          <div *ngFor="let item of cart; let i=index" class="cart-row">
+            <div class="cart-info">
+              <div class="cart-name">{{ item.name }}</div>
+              <div class="cart-price">₹{{ item.price }}</div>
+            </div>
+            <div class="cart-controls">
+              <button (click)="updateQuantity(i, -1)">-</button>
+              <span>{{ item.quantity }}</span>
+              <button (click)="updateQuantity(i, 1)">+</button>
+              <span class="item-total">₹{{ item.total }}</span>
+              <button (click)="removeFromCart(i)" class="remove-item">✖</button>
+            </div>
+          </div>
+          <div *ngIf="cart.length === 0" class="empty-cart-message">No items added</div>
+        </div>
+
+        <!-- Bill Summary -->
+        <div class="bill-summary">
+          <div class="summary-line">
+            <span>Sub Total:</span>
+            <span>₹{{ subtotal }}</span>
+          </div>
+          <div class="summary-line">
+            <span>Discount:</span>
+            <span>₹{{ discount }} <button class="action-small" (click)="applyDiscount()">Apply</button></span>
+          </div>
+          <div class="summary-line">
+            <span>Packing:</span>
+            <span>₹{{ packingCharges }} <button class="action-small" (click)="applyPackingCharges()">Add</button></span>
+          </div>
+          <div class="summary-line">
+            <span>Tax (5%):</span>
+            <span>₹{{ totalTax }}</span>
+          </div>
+          <div class="summary-line grand">
+            <span>TOTAL:</span>
+            <span>₹{{ totalPayable }}</span>
+          </div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="payment-methods">
+          <button class="payment-btn">Cash</button>
+          <button class="payment-btn">Card</button>
+          <button class="payment-btn">Sodexo</button>
+          <button class="payment-btn">Company</button>
+          <button class="payment-btn">UPI</button>
+        </div>
+
+        <!-- Cash Keypad -->
+        <div class="cash-keypad">
+          <div class="key-row">
+            <button (click)="addCashDigit('1')">1</button>
+            <button (click)="addCashDigit('2')">2</button>
+            <button (click)="addCashDigit('3')">3</button>
+          </div>
+          <div class="key-row">
+            <button (click)="addCashDigit('4')">4</button>
+            <button (click)="addCashDigit('5')">5</button>
+            <button (click)="addCashDigit('6')">6</button>
+          </div>
+          <div class="key-row">
+            <button (click)="addCashDigit('7')">7</button>
+            <button (click)="addCashDigit('8')">8</button>
+            <button (click)="addCashDigit('9')">9</button>
+          </div>
+          <div class="key-row">
+            <button (click)="addCashDigit('Clear')">C</button>
+            <button (click)="addCashDigit('0')">0</button>
+            <button (click)="addCashDigit('Enter')">↵</button>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="settlement-actions">
+          <button class="online-eft">Online EFT</button>
+          <button class="settle-button" (click)="makePayment()">Make Settlement (F11)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
